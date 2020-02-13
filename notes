@@ -1,0 +1,40 @@
+how to get how many files data are inputed? From user inputs.
+    1.dynamic allocate into array and get sizeof array then put it into the block[].file[] .
+        int *ptr = (int *)malloc(input * sizeof(int));
+
+        https://stackoverflow.com/questions/22165565/c-scanf-unknown-array-size
+
+        int *ptr;
+        while(scanf("%d", ptr[i])==1):
+            
+            ptr = (int *)realloc(i * sizeof(int))
+            i=+1
+        // end by ctrl z EOF
+        
+        //once get the file data into 1 array... start putting it in block.file
+
+        //***need to check if need more den 1 block and put remainder in next block
+        for i=0 i<sizeof(ptr) i++:
+            block[o].file[i] = ptr[]
+
+
+
+
+
+
+    for i=0; i<a+1; ++i
+        
+        scanf input
+        ptr = (int *)realloc( i * sizeof(int))
+        ptr[i] = input
+        a =+ 1
+
+
+        if input == 0
+            end
+ 
+        
+
+
+
+            
