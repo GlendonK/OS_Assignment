@@ -20,13 +20,14 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<math.h>
 
 int blockArray[121];
 int fileArray[2] = {100, 101};
 int fileArrayTwo[3] ={102, 103, 104};
 int fileArrayThree[4] = {105, 106, 107, 108};
 int fileArrayFour[5] = {109, 110, 111, 112, 113};
-size_t n = sizeof(fileArray) / sizeof(fileArray[0]);
+int n = sizeof(fileArrayFour) / sizeof(fileArrayFour[0]);
 
 struct VCB
 {
@@ -60,7 +61,7 @@ void setFreeBlockIndex()
     //initial all is free block
 
     int i;
-    for (i = 0; i<121; i += (vcb.blockSize))
+    for (i = 0; i<120; i += (vcb.blockSize))
     {
         //printf("\ni is:%d\n", i);
         //for the very first blockArray[0]
@@ -110,71 +111,92 @@ void setFileIndex()
 
 unsigned setFileSize(int file[])
 {
-    n = 3;
+    //n = 3;
     //size_t n = sizeof(file) / sizeof(file[0]);
     //directory.fileSize[0] = n;
 
 
 }
 
+
 void add(int file[])
 {
     int i;
-    int j = 0;
-    int k;
-    int endBlockIndex, nextIndex;
-    for (i = 0; i<n ; i++)
-    {   //***NEED TO loop for 121 i+= blocksize to check for next available block
-        //set the last block index as pointer to the next   
-        if( (i+1+j) % vcb.blockSize == 0 )
+    int j;
+    
+    int blockAvail = 0;
+    double blockReq;
+    double block;
+    int *freeBlockIndex;
+    int currentFreeBlock = 0;
+
+    block = n/(vcb.blockSize-1);
+    blockReq = ceill(block); // blocks required
+    printf("BLOCKREQ: %lf\n", blockReq);
+    
+    for (j = 0; j<(60); j++)
+    {
+        if (vcb.freeBlockIndex[j] != 0)
         {
-            /*endBlockIndex = (i + 1 + j);
-            j++;
-            nextIndex = (i +j + 1);
-            blockArray[endBlockIndex] = nextIndex;
-            
-            printf("\nj=%d\n", j);*/
+            blockAvail += 1; // get number of free blocks
+        }
+    }
+    printf("BLOCKAVAIL: %d\n", blockAvail); // BUG not reflected properly
 
-            endBlockIndex = (i + 1 +j);
-            for(k = 0; k<60; k++)
+    freeBlockIndex = (int*)malloc(blockAvail*sizeof(int)); // create array to store the index of free blocks of blockArray[]
+
+    for (i = 0; i<60; i++)
+    {
+        if (vcb.freeBlockIndex[i] != 0)
+        {
+            freeBlockIndex[i] = vcb.freeBlockIndex[i];
+        }
+    }
+    printf("FREEBLOCKINDEX: %d\n", freeBlockIndex[1]);
+
+    if (blockReq > blockAvail) // error if not enuf blocks
+    {
+        printf("Not enuf blocks");
+        
+    }
+    
+    if ( blockReq < blockAvail || blockReq == blockAvail)
+    {   
+        int k = 0;
+        for (i = 0; i<n ; i++) // allocating
+        {     
+            if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) != 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // assign the first empty block
             {
-                if ( vcb.freeBlockIndex[k] != 0)
-                {
-                    nextIndex = vcb.freeBlockIndex[k];
-                }
-            }
-                
-        } 
-        //allocating
-        //if entry is empty and not the pointer idex
-        if (blockArray[i+1+j] == 0 && (i+1+j) % vcb.blockSize != 0)
-        {   //if first entry of block empty 
-            /*if (blockArray[((i*vcb.blockSize) +1)] == 0)
-            {
-                nextIndex = (i + 1 + j);
-            
-                blockArray[i+1+j] = file[i];
-            }*/
-            if (blockArray[((i*vcb.blockSize) +1)] == 0)
-            {
-                if ()
-                {
-                    /* code */
-                }
-                
+                blockArray[freeBlockIndex[currentFreeBlock]+k] = file[i];
+
             }
 
+            // BUG -- does not allocate properly after the pointer index
+            if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) == 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0 ) // when need more than 1 block. assign to the next block
+            {
+                blockArray[freeBlockIndex[currentFreeBlock+1]] = file[i]; // allocate from the next empty block
+                blockArray[freeBlockIndex[currentFreeBlock]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock+1]; // set the pointer index to the start of next empty block
+                k += 1;
+            }
+            k += 1;
+   
             
         }
-
     }
+    
+    
+    free(freeBlockIndex);
+    
+        
 }
 
 void allocate()
 {
     /// if user select allocation //
     //setFileSize(fileArrayTwo);
-    add(fileArray);
+    
+
+    add(fileArrayFour);
     setFreeBlockIndex();
     setFileIndex();
     printf("\nblockArray[1]: %d\n", blockArray[1]);
@@ -266,8 +288,8 @@ void delete()
 }
 
 int main(){
-    vcb.blockSize = 3; //does not work for 2
-    setFileSize(fileArrayTwo);
+    vcb.blockSize = 3; 
+    //setFileSize(fileArrayTwo);
     setFreeBlockIndex();
     setFileIndex();
 
@@ -299,26 +321,3 @@ int main(){
     main();
     
 }
-
-/*
-                   ▄              ▄
-                  ▌▒█           ▄▀▒▌
-                  ▌▒▒█        ▄▀▒▒▒▐
-                 ▐▄▀▒▒▀▀▀▀▄▄▄▀▒▒▒▒▒▐
-               ▄▄▀▒░▒▒▒▒▒▒▒▒▒█▒▒▄█▒▐
-             ▄▀▒▒▒░░░▒▒▒░░░▒▒▒▀██▀▒▌
-            ▐▒▒▒▄▄▒▒▒▒░░░▒▒▒▒▒▒▒▀▄▒▒▌
-            ▌░░▌█▀▒▒▒▒▒▄▀█▄▒▒▒▒▒▒▒█▒▐
-           ▐░░░▒▒▒▒▒▒▒▒▌██▀▒▒░░░▒▒▒▀▄▌
-           ▌░▒▄██▄▒▒▒▒▒▒▒▒▒░░░░░░▒▒▒▒▌
-          ▌▒▀▐▄█▄█▌▄░▀▒▒░░░░░░░░░░▒▒▒▐
-          ▐▒▒▐▀▐▀▒░▄▄▒▄▒▒▒▒▒▒░▒░▒░▒▒▒▒▌
-          ▐▒▒▒▀▀▄▄▒▒▒▄▒▒▒▒▒▒▒▒░▒░▒░▒▒▐
-           ▌▒▒▒▒▒▒▀▀▀▒▒▒▒▒▒░▒░▒░▒░▒▒▒▌
-           ▐▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▒▄▒▒▐
-            ▀▄▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▄▒▒▒▒▌
-              ▀▄▒▒▒▒▒▒▒▒▒▒▄▄▄▀▒▒▒▒▄▀
-                ▀▄▄▄▄▄▄▀▀▀▒▒▒▒▒▄▄▀
-                   ▒▒▒▒▒▒▒▒▒▒▀▀
-
-*/
