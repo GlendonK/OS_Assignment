@@ -99,14 +99,14 @@ void setFileIndex()
     int i;
     for (i = 0; i<n; i += (vcb.blockSize))
     {
-        if (blockArray[i+1] == 0)
+        if (blockArray[i] == 0)
         {    
             directory.fileIndex[i/vcb.blockSize] = 0;
         }
 
-        if (blockArray[i+1] !=0 )
+        if (blockArray[i] !=0 )
         {
-            directory.fileIndex[i/vcb.blockSize] = (i+1);
+            directory.fileIndex[i/vcb.blockSize] = (i);
         }
     }
 
@@ -145,7 +145,7 @@ void add(int file[])
             blockAvail = blockAvail + 1; // get number of free blocks
         }
     }
-    printf("BLOCKAVAIL: %d\n", blockAvail); // BUG not reflected properly
+    printf("BLOCKAVAIL: %d\n", blockAvail);
 
     freeBlockIndex = (int*)malloc(blockAvail*sizeof(int)); // create array to store the index of free blocks of blockArray[]
 
@@ -185,7 +185,7 @@ void add(int file[])
                 l = l+1;
             }
 
-            // BUG -- does not allocate properly after the pointer index
+            
             if ( l == vcb.blockSize-1 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // when need more than 1 block. assign to the next block
             {
                 currentFreeBlock += 1;
