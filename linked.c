@@ -10,8 +10,8 @@
 //     fileSize[60]; THE SIZE 60? BEST SCALABLE SIZE       ///
 //     DEPENDING ON THE BLOCK SIZE.                        ///
 // 6. FREE SPACE MANAGEMENT                                ///                     ///
-// 7.                                                      ///
-// 8.                                                      ///
+// 7. MAKE DIRECTORY STRUCT ARRAY : START, END             ///
+// 8. LOOP BLOCKARRAY FROM 0                               ///
 // 9.                                                      ///
 //                                                         ///
 //////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ struct VCB
     int freeBlockIndex[60];
 };
 
-struct Directory
+struct Directory /// make into a struct array. inside be start, end of file
 {
     int fileName[60];
     int fileIndex[60];
@@ -168,19 +168,28 @@ void add(int file[])
             if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) != 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // assign the first empty block
             {
                 blockArray[freeBlockIndex[currentFreeBlock]+k] = file[i];
-
+                //k += 1;
             }
 
             // BUG -- does not allocate properly after the pointer index
-            if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) == 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0 ) // when need more than 1 block. assign to the next block
+            if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) == 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // when need more than 1 block. assign to the next block
             {
-                blockArray[freeBlockIndex[currentFreeBlock+1]] = file[i]; // allocate from the next empty block
-                blockArray[freeBlockIndex[currentFreeBlock]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock+1]; // set the pointer index to the start of next empty block
-                k += 1;
+                currentFreeBlock += 1;
+                blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock]; // set the pointer index to the start of next empty block
+                if ( blockArray[freeBlockIndex[currentFreeBlock]] == 0)
+                {
+                    blockArray[freeBlockIndex[currentFreeBlock]] = file[i]; // allocate from the next empty block
+                }
+                if (blockArray[freeBlockIndex[currentFreeBlock]] != 0)
+                {
+                    currentFreeBlock +=1;
+                    blockArray[freeBlockIndex[currentFreeBlock]] = file[i];
+                    //blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock];
+                }
+                k = 0;
+                //freeBlockIndex[currentFreeBlock] += 1;
             }
-            k += 1;
-   
-            
+            k += 1;    
         }
     }
     
@@ -195,7 +204,7 @@ void allocate()
     /// if user select allocation //
     //setFileSize(fileArrayTwo);
     
-
+    blockArray[4] = 123;
     add(fileArrayFour);
     setFreeBlockIndex();
     setFileIndex();
