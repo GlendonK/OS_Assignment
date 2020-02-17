@@ -61,6 +61,7 @@ void setFreeBlockIndex()
     //initial all is free block
 
     int i;
+    int k = 0;
     for (i = 0; i<120; i += (vcb.blockSize))
     {
         //printf("\ni is:%d\n", i);
@@ -71,22 +72,24 @@ void setFreeBlockIndex()
             vcb.freeBlockIndex[i/vcb.blockSize] = 1;
         }*/
         //for when blockArray[?] have no file -- update freeblockindex[] to the index of blockArray[]
-        if (blockArray[i+1] == 0)
+        if (blockArray[i] == 0)
         {    
             //printf("pos 2");
-            vcb.freeBlockIndex[i/vcb.blockSize] = i+1;
+            vcb.freeBlockIndex[k] = i;
+            k = k+1;
             //printf("here1");
-            directory.fileName[i/vcb.blockSize] = blockArray[i+1];
+            directory.fileName[i/vcb.blockSize] = blockArray[i];
             //printf("here2");
             directory.fileIndex[i/vcb.blockSize] = 0;
             //printf("here3");
         }
         //for when blockArray[?] have a file -- update freeblockindex to 0
-        else if (blockArray[i+1] !=0 )
+        else if (blockArray[i] !=0 )
         {
-            vcb.freeBlockIndex[i/vcb.blockSize] = 0;
-            directory.fileName[i/vcb.blockSize] = blockArray[i+1];
-            directory.fileIndex[i/vcb.blockSize] = (i+1);
+            vcb.freeBlockIndex[k] = -1;
+            k = k+1;
+            directory.fileName[i/vcb.blockSize] = blockArray[i];
+            directory.fileIndex[i/vcb.blockSize] = (i);
         }
     }
 }
@@ -137,7 +140,7 @@ void add(int file[])
     
     for (j = 0; j<(60); j++)
     {
-        if (vcb.freeBlockIndex[j] != 0)
+        if (vcb.freeBlockIndex[j] != -1)
         {
             blockAvail = blockAvail + 1; // get number of free blocks
         }
@@ -148,7 +151,7 @@ void add(int file[])
 
     for (i = 0; i<60; i++)
     {
-        if (vcb.freeBlockIndex[i] != 0)
+        if (vcb.freeBlockIndex[i] != -1)
         {
             freeBlockIndex[w] = vcb.freeBlockIndex[i];
             w++;
@@ -166,16 +169,24 @@ void add(int file[])
     if ( blockReq < blockAvail || blockReq == blockAvail)
     {   
         int k = 0;
+        int l =0;
         for (i = 0; i<n ; i++) // allocating
         {     
-            if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) != 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // assign the first empty block
+            if (blockArray[0] == 0)
+            {
+                blockArray[freeBlockIndex[currentFreeBlock]+k] = file[i];
+                l = l+1;
+            }
+
+            if ( l != vcb.blockSize-1 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0 ) // assign the first empty block
             {
                 blockArray[freeBlockIndex[currentFreeBlock]+k] = file[i];
                 //k += 1;
+                l = l+1;
             }
 
             // BUG -- does not allocate properly after the pointer index
-            if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) == 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // when need more than 1 block. assign to the next block
+            if ( l == vcb.blockSize-1 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // when need more than 1 block. assign to the next block
             {
                 currentFreeBlock += 1;
                 //blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock]; // set the pointer index to the start of next empty block
@@ -191,6 +202,7 @@ void add(int file[])
                     //blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock];
                 }
                 k = 0;
+                l=1;
                 //freeBlockIndex[currentFreeBlock] += 1;
             }
             k += 1;    
@@ -208,11 +220,12 @@ void allocate()
     /// if user select allocation //
     //setFileSize(fileArrayTwo);
     
-    blockArray[4] = 123;
+    blockArray[3] = 123;
     setFreeBlockIndex();
     add(fileArrayFour);
     setFreeBlockIndex();
     setFileIndex();
+    printf("\nblockArray[0]: %d\n", blockArray[0]);
     printf("\nblockArray[1]: %d\n", blockArray[1]);
     printf("\nblockArray[2]: %d\n", blockArray[2]);
     printf("\nblockArray[3]: %d\n", blockArray[3]);
