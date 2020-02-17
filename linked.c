@@ -129,6 +129,7 @@ void add(int file[])
     double block;
     int *freeBlockIndex;
     int currentFreeBlock = 0;
+    int w=0;
 
     block = n/(vcb.blockSize-1);
     blockReq = ceill(block); // blocks required
@@ -138,7 +139,7 @@ void add(int file[])
     {
         if (vcb.freeBlockIndex[j] != 0)
         {
-            blockAvail += 1; // get number of free blocks
+            blockAvail = blockAvail + 1; // get number of free blocks
         }
     }
     printf("BLOCKAVAIL: %d\n", blockAvail); // BUG not reflected properly
@@ -149,10 +150,12 @@ void add(int file[])
     {
         if (vcb.freeBlockIndex[i] != 0)
         {
-            freeBlockIndex[i] = vcb.freeBlockIndex[i];
+            freeBlockIndex[w] = vcb.freeBlockIndex[i];
+            w++;
         }
     }
-    printf("FREEBLOCKINDEX: %d\n", freeBlockIndex[1]);
+    printf("vcb.freeBlockIndex: %d\n", vcb.freeBlockIndex[1]);
+    printf("FREEBLOCKINDEX: %d\n", freeBlockIndex[0]);
 
     if (blockReq > blockAvail) // error if not enuf blocks
     {
@@ -175,14 +178,15 @@ void add(int file[])
             if ( (freeBlockIndex[currentFreeBlock] + k) % (vcb.blockSize) == 0 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // when need more than 1 block. assign to the next block
             {
                 currentFreeBlock += 1;
-                blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock]; // set the pointer index to the start of next empty block
+                //blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock]; // set the pointer index to the start of next empty block
                 if ( blockArray[freeBlockIndex[currentFreeBlock]] == 0)
                 {
+                    blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock]; // set the pointer index to the start of next empty block
                     blockArray[freeBlockIndex[currentFreeBlock]] = file[i]; // allocate from the next empty block
                 }
                 if (blockArray[freeBlockIndex[currentFreeBlock]] != 0)
                 {
-                    currentFreeBlock +=1;
+                    //currentFreeBlock +=1;
                     blockArray[freeBlockIndex[currentFreeBlock]] = file[i];
                     //blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock];
                 }
@@ -205,6 +209,7 @@ void allocate()
     //setFileSize(fileArrayTwo);
     
     blockArray[4] = 123;
+    setFreeBlockIndex();
     add(fileArrayFour);
     setFreeBlockIndex();
     setFileIndex();
