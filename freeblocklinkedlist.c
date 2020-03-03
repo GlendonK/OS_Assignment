@@ -67,7 +67,7 @@ void read();
 void delete();
 void createFreeBlockNode(int firstEmptyBlockIndex);
 void addFreeBlockNode(struct NODE *head, int emptyBlockIndex);
-int removeFreeBlockNode(struct NODE * head);
+void removeFreeBlockNode(struct NODE * head);
 void freePointers(struct NODE *currentNode, struct NODE *head);
 void getNextFreeBlock(struct NODE *head);
 
@@ -99,22 +99,19 @@ void addFreeBlockNode(struct NODE *head, int emptyBlockIndex)
     currentNode->next->next = NULL; // set null pointer for last node
 }
 
-int removeFreeBlockNode(struct NODE *head)
-{
-    int index = -1;
-    struct NODE *nextNode = NULL;
-    if(head ==NULL)
+void removeFreeBlockNode(struct NODE *head) 
+{   
+    if (head != NULL)
     {
-        return -1;
+        struct NODE *currentNode = head->next;
+        //free(head->next);
+        head->file = 0;
+        head->next = NULL;
+        head->file = currentNode->file;
+        head->next = currentNode->next;
+        
     }
-
-    nextNode = (head)->next;
-    index = (head)->file;
-    free(head);
-    head = nextNode;
-
-    return index;
-
+    
 
 }
 
@@ -143,6 +140,7 @@ int listCount(struct NODE *head)
     while(currentNode->next != NULL)
     {
         numNode +=1;
+        currentNode = currentNode->next;
     }
     return numNode;
 }
@@ -334,8 +332,8 @@ void add(int file[])
 
     //// get count of free block
     int numberOfFreeBlocks = listCount(head);
-    printf("WORKS BELOW WHILE LOOP");
-   /* int count = 0;
+    printf("WORKS BELOW WHILE LOOP\n");
+    int count = 0;
     int track = 0;
     int freeIndex = 0;
     struct NODE *currentNode = head;
@@ -373,7 +371,7 @@ void add(int file[])
             } 
         }
     }
-    free(arrayOfFreeIndex);*/
+    free(arrayOfFreeIndex);
 
 }
 
