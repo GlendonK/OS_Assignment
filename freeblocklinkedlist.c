@@ -29,6 +29,8 @@ int fileArrayTwo[3] ={102, 103, 104};
 int fileArrayThree[4] = {105, 106, 107, 108};
 int fileArrayFour[5] = {109, 110, 111, 112, 113};
 int n = sizeof(fileArrayFour) / sizeof(fileArrayFour[0]);
+struct NODE *head = NULL;
+int numNode;
 
 struct NODE // one box of the linked list
 {
@@ -59,17 +61,20 @@ struct Directory directory [60];
 void setFreeBlockIndex();
 unsigned setFileSize();
 void setFileIndex();
-void add();
+void add(int file[]);
 void allocate();
 void read();
 void delete();
-void createFreeBlockNode();
-void addFreeBlockNode();
+void createFreeBlockNode(int firstEmptyBlockIndex);
+void addFreeBlockNode(struct NODE *head, int emptyBlockIndex);
+int removeFreeBlockNode(struct NODE * head);
+void freePointers(struct NODE *currentNode, struct NODE *head);
+void getNextFreeBlock(struct NODE *head);
 
 void createFreeBlockNode(int firstEmptyBlockIndex)
 {
     
-    struct NODE *head = NULL;
+    //struct NODE *head = NULL;
     head = (struct NODE*)malloc(sizeof(struct NODE)); // creates node
 
     head ->file = firstEmptyBlockIndex; // set first empty index
@@ -94,21 +99,62 @@ void addFreeBlockNode(struct NODE *head, int emptyBlockIndex)
     currentNode->next->next = NULL; // set null pointer for last node
 }
 
+int removeFreeBlockNode(struct NODE *head)
+{
+    int index = -1;
+    struct NODE *nextNode = NULL;
+    if(head ==NULL)
+    {
+        return -1;
+    }
+
+    nextNode = (head)->next;
+    index = (head)->file;
+    free(head);
+    head = nextNode;
+
+    return index;
+
+
+}
+
+
+/* 
+!how to free all the pointers after programme end ?
+*/
+void freePointers(struct NODE *currentNode, struct NODE *head){
+    free(currentNode);
+    free(head);
+}
+
+void printList(struct NODE *head)
+{
+    struct NODE *thisNode = head;
+    while(thisNode->next!=NULL)
+    {
+        printf("%d\n", thisNode->file);
+        thisNode = thisNode->next;   
+    }
+}
+
+int listCount(struct NODE *head)
+{
+    struct NODE *currentNode = head;
+    while(currentNode->next != NULL)
+    {
+        numNode +=1;
+    }
+    return numNode;
+}
+
 void setFreeBlockIndex()
 {
     //initial all is free block
 
-    int i;
+    /*int i;
     int k = 0;
     for (i = 0; i<120; i += (vcb.blockSize))
     {
-        //printf("\ni is:%d\n", i);
-        //for the very first blockArray[0]
-        /*if (blockArray[1] == 0)
-        {
-            printf("pos 1");
-            vcb.freeBlockIndex[i/vcb.blockSize] = 1;
-        }*/
         //for when blockArray[?] have no file -- update freeblockindex[] to the index of blockArray[]
         if (blockArray[i] == 0)
         {    
@@ -129,7 +175,33 @@ void setFreeBlockIndex()
             directory[i/vcb.blockSize].fileName = blockArray[i];
             directory[i/vcb.blockSize].fileIndex = (i);
         }
+    }*/
+
+    int i;
+    for(i=0;i<121;i+=vcb.blockSize)
+    {
+        if(blockArray[i] == 0)
+        {
+            if(head == NULL)
+            {
+                createFreeBlockNode(0);
+            }
+
+            if(head != NULL)
+            {
+                addFreeBlockNode(head, i);
+            }
+
+        }
+        // remove in the add()
+       /* if(blockArray[i] != 0)
+        {
+            removeFreeBlockNode(head);
+        }*/ 
     }
+
+    
+
 }
 
 void setFileIndex()
@@ -160,7 +232,7 @@ unsigned setFileSize(int file[])
 }
 
 
-void add(int file[])
+/*void add(int file[])
 {
     int i;
     int j;
@@ -251,19 +323,73 @@ void add(int file[])
     free(freeBlockIndex);
     
         
+}*/
+
+void add(int file[])
+{
+    //check block req
+    double block = n/(vcb.blockSize-1);
+    double blockReq = ceill(block); // blocks required
+    printf("BLOCKREQ: %lf\n", blockReq);
+
+    //// get count of free block
+    int numberOfFreeBlocks = listCount(head);
+    printf("WORKS BELOW WHILE LOOP");
+   /* int count = 0;
+    int track = 0;
+    int freeIndex = 0;
+    struct NODE *currentNode = head;
+    int *arrayOfFreeIndex = (int*)malloc(sizeof(int)*numberOfFreeBlocks);
+    while (currentNode->next != NULL)
+    {
+        arrayOfFreeIndex[freeIndex] = currentNode->file; // put all free index into a array
+        freeIndex +=1;
+        currentNode = currentNode->next;
+    }
+
+    
+    
+
+    if (blockReq < numberOfFreeBlocks || blockReq == numberOfFreeBlocks) // if enuogh blocks
+    {
+        for(int i=0;i<n; i++)
+        {
+            if (count == arrayOfFreeIndex[track]) // at start of block
+            {
+                removeFreeBlockNode(head);
+                blockArray[count] = file[i];
+                track +=1;
+                count +=1;
+            }
+            else if (blockArray[count] == 0 && (count + 1) % vcb.blockSize != 0) // not start. not pointer 
+            {
+                blockArray[count] = file[i];
+                count +=1;
+            }
+            else if ((count+1) % vcb.blockSize == 0 )// at pointer
+            {
+                blockArray[count] = arrayOfFreeIndex[track];
+                count +=1;
+            } 
+        }
+    }
+    free(arrayOfFreeIndex);*/
+
 }
 
 void allocate()
 {
     /// if user select allocation //
-    //setFileSize(fileArrayTwo);
-    
-    blockArray[3] = 123;
-    setFreeBlockIndex();
+    //printList(head);
     add(fileArrayFour);
-    setFreeBlockIndex();
-    setFileIndex();
-    printf("\nblockArray[0]: %d\n", blockArray[0]);
+    printList(head);
+    //setFileSize(fileArrayTwo);
+    //blockArray[3] = 123;
+    //setFreeBlockIndex();
+    //add(fileArrayFour);
+    //setFreeBlockIndex();
+    //setFileIndex();
+    /*printf("\nblockArray[0]: %d\n", blockArray[0]);
     printf("\nblockArray[1]: %d\n", blockArray[1]);
     printf("\nblockArray[2]: %d\n", blockArray[2]);
     printf("\nblockArray[3]: %d\n", blockArray[3]);
@@ -275,15 +401,9 @@ void allocate()
     printf("\nblockArray[9]: %d\n", blockArray[9]);
     printf("\nblockArray[10]: %d\n", blockArray[10]);
     printf("\nblockArray[11]: %d\n", blockArray[11]);
-    printf("\nblockArray[16]: %d\n", blockArray[16]);
-    printf("\nvcb.freeBlockIndex[0]: %d\n", vcb.freeBlockIndex[0]);
-    printf("\nvcb.freeBlockIndex[1]: %d\n", vcb.freeBlockIndex[1]);
-    printf("\nvcb.freeBlockIndex[2]: %d\n", vcb.freeBlockIndex[2]);
-    printf("\nvcb.freeBlockIndex[3]: %d\n", vcb.freeBlockIndex[3]);
-    printf("\nvcb.freeBlockIndex[4]: %d\n", vcb.freeBlockIndex[4]);
-    printf("\ndirectory.fileIndex[0]: %d\n", directory[0].fileIndex);
-    printf("\ndirectory[0].fileEnd: %d\n", directory[0].fileEnd);
-    printf("\nfilearray: %d", n);
+    printf("\nblockArray[16]: %d\n", blockArray[16]);*/
+    printf("Linked List: %d", head->next->file); //// 2nd block index
+    //printf("\nfilearray: %d", n);
     //////////////////////////////////
     return;
 }
@@ -358,7 +478,7 @@ int main(){
     setFreeBlockIndex();
     setFileIndex();
 
-    ///prompt user////
+    ///prompt user
     int choose;
     printf("\nPress 1 to allocate\n");
     printf("\nPress 2 to read\n");
