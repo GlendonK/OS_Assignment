@@ -1,23 +1,5 @@
-/*#include <stdio.h>
-#include <stdlib.h>
-
-struct NODE
-{
-    int file;
-    struct NODE *next;
-};
-
-
-int main(){
-
-
-   struct NODE *head = NULL;
-   head = (struct NODE*)malloc(sizeof(struct NODE));
-
-   head ->file = 1;
-   head ->next = NULL;
-
-}*/
+//! MUST INITIALISE THE LINKED LIST FIRST "111". AS LINKED LIST CAN ONLY BE BUILDT ONCE.
+//! LINKED LIST WILL APPEND TO TAIL TO ITSELF IF MULTIPLE RUNS
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -28,7 +10,7 @@ int fileArray[2] = {100, 101};
 int fileArrayTwo[3] ={102, 103, 104};
 int fileArrayThree[4] = {105, 106, 107, 108};
 int fileArrayFour[5] = {109, 110, 111, 112, 113};
-int n = sizeof(fileArrayFour) / sizeof(fileArrayFour[0]);
+int n = sizeof(fileArrayFour) / sizeof(fileArrayFour[0]); //! NEED TO CHANGE THIS TO CHANGE ARRAY.
 struct NODE *head = NULL;
 int numNode;
 
@@ -70,6 +52,7 @@ void addFreeBlockNode(struct NODE *head, int emptyBlockIndex);
 void removeFreeBlockNode(struct NODE * head);
 void freePointers(struct NODE *currentNode, struct NODE *head);
 void getNextFreeBlock(struct NODE *head);
+void setBlockStart();
 
 void createFreeBlockNode(int firstEmptyBlockIndex)
 {
@@ -147,38 +130,10 @@ int listCount(struct NODE *head)
 
 void setFreeBlockIndex()
 {
-    //initial all is free block
-
-    /*int i;
-    int k = 0;
-    for (i = 0; i<120; i += (vcb.blockSize))
-    {
-        //for when blockArray[?] have no file -- update freeblockindex[] to the index of blockArray[]
-        if (blockArray[i] == 0)
-        {    
-            //printf("pos 2");
-            vcb.freeBlockIndex[k] = i;
-            k = k+1;
-            //printf("here1");
-            directory[i/vcb.blockSize].fileName = blockArray[i];
-            //printf("here2");
-            directory[i/vcb.blockSize].fileIndex = 0;
-            //printf("here3");
-        }
-        //for when blockArray[?] have a file -- update freeblockindex to 0
-        else if (blockArray[i] !=0 )
-        {
-            vcb.freeBlockIndex[k] = -1;
-            k = k+1;
-            directory[i/vcb.blockSize].fileName = blockArray[i];
-            directory[i/vcb.blockSize].fileIndex = (i);
-        }
-    }*/
-
     int i;
-    for(i=0;i<121;i+=vcb.blockSize)
+    for(i=0;i<60;i+=vcb.blockSize)
     {
-        if(blockArray[i] == 0)
+        if(blockArray[i] == -1)
         {
             if(head == NULL)
             {
@@ -191,30 +146,42 @@ void setFreeBlockIndex()
             }
 
         }
-        // remove in the add()
-       /* if(blockArray[i] != 0)
-        {
-            removeFreeBlockNode(head);
-        }*/ 
     }
 
     
 
 }
 
-void setFileIndex()
+void setFileIndex(int fileName)
 {
     int i;
-    for (i = 0; i<n; i += (vcb.blockSize))
+    int blockCounter = 0;
+    int pointerCounter;
+    for (i = 0; i<60; i++)
     {
-        if (blockArray[i] == 0)
+        if (blockArray[blockCounter] == -1) // if block entry is empty
         {    
-            directory[i/vcb.blockSize].fileIndex = 0;
+            directory[i].fileIndex = 0;
+            directory[i].fileName = blockArray[blockCounter];
+            blockCounter = blockCounter + vcb.blockSize; // go next starting entry block
         }
 
-        if (blockArray[i] !=0 )
+        if (blockArray[blockCounter] != -1 && blockArray[blockCounter] == fileName ) // if block entry is occupied and entry is the filename
         {
-            directory[i/vcb.blockSize].fileIndex = (i);
+            directory[i].fileIndex = (blockCounter); // save file start
+            directory[i].fileName = blockArray[blockCounter]; // save file name
+            pointerCounter = blockCounter; // go next starting entry
+
+            while (blockArray[pointerCounter + vcb.blockSize -1] != -1) // while pointer entry not empty. 
+                                                                        //to find the file end which is when the poitner entry is -1
+                                                                        // operate within a block at a time.
+            {
+                //pointerCounter = pointerCounter +vcb.blockSize; // go next block
+                directory[i].fileEnd = blockArray[pointerCounter + vcb.blockSize -1]; // save file end as the element of pointer index/entry
+                pointerCounter = blockArray[pointerCounter + vcb.blockSize -1]; //  jump to next block the file using.
+            }
+            //directory[i].fileEnd = pointerCounter; // save file end
+            blockCounter = blockCounter + vcb.blockSize; // go next block
         }
     }
 
@@ -229,102 +196,23 @@ unsigned setFileSize(int file[])
 
 }
 
-
-/*void add(int file[])
+void setBlockStart() // make all empty entry = -1
 {
-    int i;
-    int j;
-    
-    int blockAvail = 0;
-    double blockReq;
-    double block;
-    int *freeBlockIndex;
-    int currentFreeBlock = 0;
-    int w=0;
-
-    block = n/(vcb.blockSize-1);
-    blockReq = ceill(block); // blocks required
-    printf("BLOCKREQ: %lf\n", blockReq);
-    
-    for (j = 0; j<(60); j++)
+    for (int i = 0; i<60; i++)
     {
-        if (vcb.freeBlockIndex[j] != -1)
+        if (blockArray[i] == 0)
         {
-            blockAvail = blockAvail + 1; // get number of free blocks
+            blockArray[i] = -1;
         }
+       
     }
-    printf("BLOCKAVAIL: %d\n", blockAvail);
+}
 
-    freeBlockIndex = (int*)malloc(blockAvail*sizeof(int)); // create array to store the index of free blocks of blockArray[]
-
-    for (i = 0; i<60; i++)
-    {
-        if (vcb.freeBlockIndex[i] != -1)
-        {
-            freeBlockIndex[w] = vcb.freeBlockIndex[i];
-            w++;
-        }
-    }
-    printf("vcb.freeBlockIndex: %d\n", vcb.freeBlockIndex[1]);
-    printf("FREEBLOCKINDEX: %d\n", freeBlockIndex[0]);
-
-    if (blockReq > blockAvail) // error if not enuf blocks
-    {
-        printf("Not enuf blocks");
-        
-    }
-    
-    if ( blockReq < blockAvail || blockReq == blockAvail)
-    {   
-        int k = 0;
-        int l =0;
-        for (i = 0; i<n ; i++) // allocating
-        {     
-            if (blockArray[0] == 0)
-            {
-                blockArray[freeBlockIndex[currentFreeBlock]+k] = file[i];
-                l = l+1;
-            }
-
-            if ( l != vcb.blockSize-1 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0 ) // assign the first empty block
-            {
-                blockArray[freeBlockIndex[currentFreeBlock]+k] = file[i];
-                //k += 1;
-                l = l+1;
-            }
-
-            
-            if ( l == vcb.blockSize-1 && blockArray[freeBlockIndex[currentFreeBlock]+k] == 0) // when need more than 1 block. assign to the next block
-            {
-                currentFreeBlock += 1;
-                //blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock]; // set the pointer index to the start of next empty block
-                if ( blockArray[freeBlockIndex[currentFreeBlock]] == 0)
-                {
-                    blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock]; // set the pointer index to the start of next empty block
-                    blockArray[freeBlockIndex[currentFreeBlock]] = file[i]; // allocate from the next empty block
-                }
-                if (blockArray[freeBlockIndex[currentFreeBlock]] != 0)
-                {
-                    //currentFreeBlock +=1;
-                    blockArray[freeBlockIndex[currentFreeBlock]] = file[i];
-                    //blockArray[freeBlockIndex[currentFreeBlock-1]+(vcb.blockSize-1)] = freeBlockIndex[currentFreeBlock];
-                }
-                k = 0;
-                l=1;
-                //freeBlockIndex[currentFreeBlock] += 1;
-            }
-            k += 1;    
-        }
-    }
-    
-    
-    free(freeBlockIndex);
-    
-        
-}*/
 
 void add(int file[])
 {
+    //blockArray[0] = 500;
+    //removeFreeBlockNode(head);
     //check block req
     double block = n/(vcb.blockSize-1);
     double blockReq = ceill(block); // blocks required
@@ -332,7 +220,6 @@ void add(int file[])
 
     //// get count of free block
     int numberOfFreeBlocks = listCount(head);
-    printf("WORKS BELOW WHILE LOOP\n");
     int count = 0;
     int track = 0;
     int freeIndex = 0;
@@ -346,32 +233,49 @@ void add(int file[])
     }
 
     
-    
 
     if (blockReq < numberOfFreeBlocks || blockReq == numberOfFreeBlocks) // if enuogh blocks
     {
+        count = arrayOfFreeIndex[0];
         for(int i=0;i<n; i++)
         {
-            if (count == arrayOfFreeIndex[track]) // at start of block
+            if (count == arrayOfFreeIndex[track] && blockArray[count] == -1) // at start of block
             {
                 removeFreeBlockNode(head);
                 blockArray[count] = file[i];
                 track +=1;
                 count +=1;
             }
-            else if (blockArray[count] == 0 && (count + 1) % vcb.blockSize != 0) // not start. not pointer 
+            else if (blockArray[count] == -1 && (count + 1) % vcb.blockSize != 0) // not start. not pointer 
             {
                 blockArray[count] = file[i];
                 count +=1;
             }
+            
+            else if (count == arrayOfFreeIndex[track] && blockArray[count] !=-1) // when a starting block entry is occupied
+            {
+                track +=1;
+                count = arrayOfFreeIndex[track];
+                i -=1;
+            }
+            
             else if ((count+1) % vcb.blockSize == 0 )// at pointer
             {
                 blockArray[count] = arrayOfFreeIndex[track];
                 count +=1;
+                //track +=1;
+                i -=1;
             } 
+            
         }
     }
+    else if(blockReq > numberOfFreeBlocks) //! BUG: does not run for some reason
+    {
+        printf("\nNot Enough Blocks\n");
+    }
+    
     free(arrayOfFreeIndex);
+    setFileIndex(file[0]);
 
 }
 
@@ -379,7 +283,10 @@ void allocate()
 {
     /// if user select allocation //
     //printList(head);
+    //add(fileArrayFour);
     add(fileArrayFour);
+    //removeFreeBlockNode(head);
+    //removeFreeBlockNode(head);
     printList(head);
     //setFileSize(fileArrayTwo);
     //blockArray[3] = 123;
@@ -400,7 +307,11 @@ void allocate()
     printf("\nblockArray[10]: %d\n", blockArray[10]);
     printf("\nblockArray[11]: %d\n", blockArray[11]);
     printf("\nblockArray[16]: %d\n", blockArray[16]);*/
-    printf("Linked List: %d", head->next->file); //// 2nd block index
+    for (int i = 0; i<61; i++)
+    {
+        printf("\nblockArray[%d]: %d",i,blockArray[i]);
+    }
+    printf("\nLinked List: %d", head->next->file); //// 2nd block index
     //printf("\nfilearray: %d", n);
     //////////////////////////////////
     return;
@@ -410,55 +321,42 @@ void read()
 {
     int readfile;
     int i, j;
-    int thisFileIndex;
+    //int thisFileIndex;
     printf("Read what file?");
     scanf("%d", &readfile);
     
     for (i=0; i<60; i++)
     {
         if (readfile == directory[i].fileName)
-    {
-        printf("\ndirectory.fileName: %d\n", directory[i].fileName);
-        printf("\ndirectory.fileIndex: %d\n", directory[i].fileIndex);
-        thisFileIndex = directory[i].fileIndex;
-        
-    
-    }
-    
-    }
-
-   /* printf("\nFiles: \n");
-    
-    for (j = 0; j<20; j++)
-    {
-
-        if ((j + 1) % vcb.blockSize == 0)
         {
-            thisFileIndex = blockArray[j + 1];
+            printf("\ndirectory.fileName: %d\n", directory[i].fileName);
+            printf("\ndirectory.fileIndex: %d\n", directory[i].fileIndex);
+            printf("\ndirectory.fileEnd: %d\n", directory[i].fileEnd);
+            //thisFileIndex = directory[i].fileIndex;
         }
-        if ((j + 1) % vcb.blockSize != 0)
-        {
-            printf("\n%d\n", blockArray[thisFileIndex]);
-
-        }
-    }*/
+    }
 }
 
-void delete()
+void delete() 
 {
     int delete;
     printf("\nWhat file to delete: \n");
     scanf("%d", &delete);
     //Find the filename to delete
     int i, j;
-    for (i = 0; i<121; i =+ (vcb.blockSize))
+    for (i = 0; i<60; i += (vcb.blockSize))
     {
         if (delete == blockArray[i])
         {
-            for ( j = 0; j<vcb.blockSize-1; j++)
-            {
-                blockArray[i +j] = 0;
-            }
+            /*
+            //// get the file name and start index and fileEnd. 
+            //// directory[i].fileName == delete:
+            //// directory[i].fileIndex , directory[i].fileEnd is the start and end.
+            //// for i=fileIndex i<filesize(n)+fileIndex i++:
+            //// blockArray[i] = -1
+            //// if index entry != -1:
+            //// blockArray[index entry] = -1
+            */
         }
         else
         {
@@ -473,11 +371,13 @@ void delete()
 int main(){
     vcb.blockSize = 3; 
     //setFileSize(fileArrayTwo);
-    setFreeBlockIndex();
-    setFileIndex();
+    setBlockStart(); // make all block entry -1
+    //setFreeBlockIndex(); // must only run once
+    //setFreeBlockIndex();
 
     ///prompt user
     int choose;
+    printf("\nPress 111 to initialise linked list\n");
     printf("\nPress 1 to allocate\n");
     printf("\nPress 2 to read\n");
     printf("\nPress 3 to delete\n");
@@ -488,18 +388,23 @@ int main(){
         allocate();
         
     }
-    if ( choose == 2)
+    else if ( choose == 2)
     {
         read();
     }
-    if ( choose == 0 )
+    else if ( choose == 0 )
     {
         exit(0);
     }
-    if ( choose == 3)
+    else if ( choose == 3)
     {
         delete();
     }
+    else if ( choose == 111)
+    {
+        setFreeBlockIndex(); // must only run once
+    }
+    
 
     main();
     
