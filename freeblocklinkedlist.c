@@ -174,6 +174,10 @@ void setFileIndex(int fileName, int fileNameTwo)
             directory[i].fileName = fileName; // save file name
             pointerCounter = blockCounter; // clone counter
             //printf("109");
+            if (blockArray[pointerCounter + vcb.blockSize -1] == -1) // if file ends in the start block make the fileEnd = fileStart
+            {
+                directory[i].fileEnd = blockCounter;
+            }
 
             while (blockArray[pointerCounter + vcb.blockSize -1] != -1) // while pointer entry not empty. 
                                                                         //to find the file end which is when the poitner entry is -1
@@ -375,7 +379,7 @@ void delete()
                delName = directory[i].fileName; // save for later use
                delStart = directory[i].fileIndex;
                addFreeBlockNode(head, delStart);
-               delEnd = directory[i].fileEnd;
+               //delEnd = directory[i].fileEnd;
                directory[i].fileName = 0; // set to 0
                directory[i].fileIndex = 0;
                directory[i].fileEnd = 0;
@@ -410,7 +414,7 @@ void delete()
 }
 
 int main(){
-    vcb.blockSize = 3; 
+    vcb.blockSize = 10; 
     //setFileSize(fileArrayTwo);
     setBlockStart(); // make all block entry -1
     //setFreeBlockIndex(); // must only run once
